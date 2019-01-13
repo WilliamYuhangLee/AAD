@@ -8,6 +8,6 @@ AAD is dedicated to develop a framework that fundamentally alters the developmen
 Email: williamlee@gatech.edu
 
 ## Useful Links
-[VIP notebook - Yuhang Li](https://vip.gatech.edu/wiki/index.php/Notebook_Yuhang_Li)
-[VIP wiki - AAD homepage](https://vip.gatech.edu/wiki/index.php/Automated_Algorithm_Design)
+[VIP notebook - Yuhang Li](https://vip.gatech.edu/wiki/index.php/Notebook_Yuhang_Li)  
+[VIP wiki - AAD homepage](https://vip.gatech.edu/wiki/index.php/Automated_Algorithm_Design)  
 [VIP wiki - Main page](https://vip.gatech.edu/wiki/index.php/Main_Page)
