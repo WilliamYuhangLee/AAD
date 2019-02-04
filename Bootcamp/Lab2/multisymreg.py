@@ -14,11 +14,11 @@ from deap import gp
 random.seed(25)
 
 # Create fitness and individual classes
-creator.create("FitnessMin", base.Fitness, weights=(-1, -1)) # Set multiobjectives
-creator.create("Individual", gp.PrimitiveTree, fitness=creator.FitnessMin) # represented as tree structure
+creator.create("FitnessMin", base.Fitness, weights=(-1, -1))  # Set multiple objectives
+creator.create("Individual", gp.PrimitiveTree, fitness=creator.FitnessMin)  # represented as tree structure
 
 # Initialize a primitive set that contains all the primitives we can use
-pset = gp.PrimitiveSet("Main", arity=1) # arity = amount of arguments each primitive takes
+pset = gp.PrimitiveSet("Main", arity=1)  # arity = amount of arguments each primitive takes
 pset.addPrimitive(np.add, arity=2)
 pset.addPrimitive(np.subtract, arity=2)
 pset.addPrimitive(np.multiply, arity=2)
@@ -35,15 +35,18 @@ toolbox.register("individual", tools.initIterate, creator.Individual, toolbox.ex
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 toolbox.register("compile", gp.compile, pset=pset)
 
-def evalSymReg(individual, points, pset):
+
+def eval_symb_reg(individual, points, pset):
     # Compile the tree into a function
     func = gp.compile(expr=individual, pset=pset)
     # Calculate main squared error between this function and the target function
-    sqerrors = (func(points) - (np.negative(points) + np.sin(points ** 2) + np.tan(points ** 3) + np.cos(points))) ** 2
-    return (np.sqrt(np.sum(sqerrors) / len(points)), len(individual)) # Set standard dev and length of individual as objectives
+    sq_errors = (func(points) - (np.negative(points) + np.sin(points ** 2) + np.tan(points ** 3) + np.cos(points))) ** 2
+    # Set standard dev and length of individual as objectives
+    return np.sqrt(np.sum(sq_errors) / len(points)), len(individual)
+
 
 # Register genetic operators
-toolbox.register("evaluate", evalSymReg, points=np.linspace(-1, 1, 1000), pset=pset)
+toolbox.register("evaluate", eval_symb_reg, points=np.linspace(-1, 1, 1000), pset=pset)
 toolbox.register("select", tools.selTournament, tournsize=3)
 toolbox.register("mate", gp.cxOnePoint)
 toolbox.register("expr_mut", gp.genFull, min_=0, max_=2)
@@ -52,6 +55,7 @@ toolbox.register("mutate", gp.mutUniform, expr=toolbox.expr_mut, pset=pset)
 # Add tree height constraints to crossover and mutation functions
 toolbox.decorate("mate", gp.staticLimit(key=operator.attrgetter("height"), max_value=17))
 toolbox.decorate("mutate", gp.staticLimit(key=operator.attrgetter("height"), max_value=17))
+
 
 # Returns true if the first individual dominates the second individual
 def pareto_dominance(ind1, ind2):
@@ -62,6 +66,7 @@ def pareto_dominance(ind1, ind2):
         elif value1 < value2:
             not_equal = True
     return not_equal
+
 
 # Initialize a random population of 300
 pop = toolbox.population(n=300)
@@ -81,9 +86,12 @@ dominators = [ind for ind in pop if pareto_dominance(ind, a_given_individual)]
 others = [ind for ind in pop if not ind in dominated and not ind in dominators]
 
 # Plot the objective space using sorted population
-for ind in dominators: plt.plot(ind.fitness.values[0], ind.fitness.values[1], 'r.', alpha=0.7)
-for ind in dominated: plt.plot(ind.fitness.values[0], ind.fitness.values[1], 'g.', alpha=0.7)
-for ind in others: plt.plot(ind.fitness.values[0], ind.fitness.values[1], 'k.', alpha=0.7, ms=3)
+for ind in dominators:
+    plt.plot(ind.fitness.values[0], ind.fitness.values[1], 'r.', alpha=0.7)
+for ind in dominated:
+    plt.plot(ind.fitness.values[0], ind.fitness.values[1], 'g.', alpha=0.7)
+for ind in others:
+    plt.plot(ind.fitness.values[0], ind.fitness.values[1], 'k.', alpha=0.7, ms=3)
 plt.plot(a_given_individual.fitness.values[0], a_given_individual.fitness.values[1], 'bo', ms=6);
 plt.xlabel('Mean Squared Error');plt.ylabel('Tree Size');
 plt.title('Objective space');
@@ -116,3 +124,27 @@ plt.xlabel("Generation")
 plt.ylabel("Fitness")
 plt.legend(loc="upper left")
 plt.show()
+
+# Split fitness values into separate lists
+fitness_1 = [ind.fitness.values[0] for ind in hof]
+fitness_2 = [ind.fitness.values[1] for ind in hof]
+pop_1 = [ind.fitness.values[0] for ind in pop]
+pop_2 = [ind.fitness.values[1] for ind in pop]
+
+# Print dominated population for debugging
+# for ind in pop:
+#     print(ind.fitness)
+
+plt.scatter(pop_1, pop_2, color='b')
+plt.scatter(fitness_1, fitness_2, color='r')
+plt.plot(fitness_1, fitness_2, color='r', drawstyle='steps-post')
+plt.xlabel("Mean Squared Error")
+plt.ylabel("Tree Size")
+plt.title("Pareto Front")
+plt.show()
+
+f1 = np.array(fitness_1)
+f2 = np.array(fitness_2)
+
+# Calculate area under curve with least squares method
+print("Area Under Curve: %s" % (np.sum(np.abs(np.diff(f1))*f2[:-1])))
