@@ -112,7 +112,7 @@ X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, test_size=
 
 # Parameters Tuning
 def svc_param_selection(x, y):
-    Cs = [0.01, 0.03, 0.1, 0.3, 1, 3]
+    Cs = [0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1]
     gammas = [1, 0.1, 0.01, 0.001, 0.0001]
     param_grid = [{"kernel": ["linear", "rbf"], "C": Cs, "gamma": gammas}]
     grid_search = GridSearchCV(svm.SVC(), param_grid, cv=5)
@@ -120,9 +120,9 @@ def svc_param_selection(x, y):
     return grid_search.best_params_
 
 
-best_params = {"kernel": "linear", "C": 0.01}  # arbitrary parameters
-# best_params = svc_param_selection(X_train.values, y_train.values)
-# print(best_params)
+# best_params = {"kernel": "linear", "C": 0.01}  # arbitrary parameters
+best_params = svc_param_selection(X_train.values, y_train.values)
+print("Best parameters detected:", best_params)
 
 # Using SVM Classifier from sci-kit learn to train
 svm_clf = svm.SVC()
