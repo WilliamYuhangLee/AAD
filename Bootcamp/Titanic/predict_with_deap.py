@@ -181,7 +181,7 @@ toolbox.decorate("mutate", gp.staticLimit(key=operator.attrgetter("height"), max
 # plt.show()
 
 # Main evolutionary algorithm
-NGEN = 150  # number of generations
+NGEN = 60  # number of generations
 MU = 50  # size of population
 LAMBDA = 100  # number of children to produce at each generation
 CXPB = 0.5  # probability that an offspring is produced by crossover
