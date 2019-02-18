@@ -170,8 +170,8 @@ plt.plot(gen, np.mean(np.delete(min_, 1, axis=1), axis=1), label="minimum of ave
 plt.xlabel("Generation")
 plt.ylabel("Average Fitness Values")
 plt.legend(loc="upper left")
-plt.show()
 plt.savefig('out/predict_with_deap/evolution_history.png', bbox_inches='tight')
+plt.show()
 
 # Split fitness values into separate lists
 fitness_1 = [ind.fitness.values[1] for ind in hof]
@@ -189,8 +189,8 @@ plt.plot(fitness_1, fitness_2, color='r', linestyle='None')
 plt.xlabel("FPR")
 plt.ylabel("FNR")
 plt.title("Pareto Front")
-plt.show()
 plt.savefig('out/predict_with_deap/pareto_front.png', bbox_inches='tight')
+plt.show()
 
 f1 = np.array(fitness_1)
 f2 = np.array(fitness_2)
