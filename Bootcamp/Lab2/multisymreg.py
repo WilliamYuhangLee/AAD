@@ -92,9 +92,10 @@ for ind in dominated:
     plt.plot(ind.fitness.values[0], ind.fitness.values[1], 'g.', alpha=0.7)
 for ind in others:
     plt.plot(ind.fitness.values[0], ind.fitness.values[1], 'k.', alpha=0.7, ms=3)
-plt.plot(a_given_individual.fitness.values[0], a_given_individual.fitness.values[1], 'bo', ms=6);
-plt.xlabel('Mean Squared Error');plt.ylabel('Tree Size');
-plt.title('Objective space');
+plt.plot(a_given_individual.fitness.values[0], a_given_individual.fitness.values[1], 'bo', ms=6)
+plt.xlabel('Mean Squared Error')
+plt.ylabel('Tree Size')
+plt.title('Objective space')
 plt.tight_layout()
 plt.show()
 

@@ -120,8 +120,8 @@ def svc_param_selection(x, y):
     return grid_search.best_params_
 
 
-# best_params = {"kernel": "linear", "C": 0.01}  # arbitrary parameters
-best_params = svc_param_selection(X_train.values, y_train.values)
+best_params = {"kernel": "linear", "C": 0.01}  # arbitrary parameters
+# best_params = svc_param_selection(X_train.values, y_train.values)
 print("Best parameters detected:", best_params)
 
 # Using SVM Classifier from sci-kit learn to train
