@@ -62,7 +62,7 @@ x_train, x_validation, y_train, y_validation = train_test_split(x_train, y_train
 ##################
 
 # Create Fitness class
-creator.create("FitnessClassification", base.Fitness, weights=(-1, -1))  # Maximize TPR, TNR, minimize FPR, FNR
+creator.create("FitnessClassification", base.Fitness, weights=(-1, -1, -1))  # Maximize TPR, TNR, minimize FPR, FNR
 
 # Create Individual class
 creator.create("Individual", gp.PrimitiveTree, fitness=creator.FitnessClassification)
@@ -72,10 +72,8 @@ primitive_set = gp.PrimitiveSet("main", x_train.shape[1])
 primitive_set.addPrimitive(np.add, arity=2)
 primitive_set.addPrimitive(np.subtract, arity=2)
 primitive_set.addPrimitive(np.multiply, arity=2)
-primitive_set.addPrimitive(np.power, arity=2)
 primitive_set.addPrimitive(np.negative, arity=1)
 primitive_set.addPrimitive(np.square, arity=1)
-primitive_set.addPrimitive(np.absolute, arity=1)
 
 # Rename arguments
 primitive_set.renameArguments(ARG0='Pclass')
@@ -103,8 +101,8 @@ toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 toolbox.register("compile", gp.compile, pset=primitive_set)
 
 
-# Evaluate the fitness of an Individual by testing it with validation set (x is a panda DF, y is a list of values)
-def evaluate_individual_fitness(individual, x, y):
+# Evaluate the performance of an Individual by testing it with validation set (x is a panda DF, y is a list of values)
+def evaluate_individual_performance(individual, x, y):
     # Compile the Individual (a PrimitiveTree) into an executable function
     func = toolbox.compile(individual)
     y_predictions = []  # hold results
@@ -112,19 +110,25 @@ def evaluate_individual_fitness(individual, x, y):
     # Predict for each row (passenger)
     for row in x.values:
         result = func(*row)
-        result = 1 if result >= 0 else 0
+        result = 1 if -10 <= result <= 10 else 0
         y_predictions.append(result)
 
     # Get TN, FP, FN, TP from the confusion matrix
     tn, fp, fn, tp = confusion_matrix(y, y_predictions).ravel()
 
     # Calculate accuracy rates
-    # tpr = tp / (tp + fn)
-    # tnr = tn / (tn + fp)
+    tpr = tp / (tp + fn)
+    tnr = tn / (tn + fp)
     fpr = fp / (fp + tn)
     fnr = fn / (fn + tp)
 
-    return fpr, fnr
+    return tpr, tnr, fpr, fnr
+
+
+# Decides which metrics are used as fitness values for an individual
+def evaluate_individual_fitness(individual, x, y):
+    tpr, tnr, fpr, fnr = evaluate_individual_performance(individual, x, y)
+    return fpr ** 2 + fnr ** 2, fpr, fnr
 
 
 # Register genetic operators
@@ -138,50 +142,8 @@ toolbox.register("mutate", gp.mutUniform, expr=toolbox.expr_mut, pset=primitive_
 toolbox.decorate("mate", gp.staticLimit(key=operator.attrgetter("height"), max_value=20))
 toolbox.decorate("mutate", gp.staticLimit(key=operator.attrgetter("height"), max_value=20))
 
-
-# # Returns true if the first individual dominates the second individual
-# def pareto_dominance(ind1, ind2):
-#     not_equal = False
-#     for value1, value2 in zip(ind1.fitness.values, ind2.fitness.values):
-#         if value1 > value2:
-#             return False
-#         elif value1 < value2:
-#             not_equal = True
-#     return not_equal
-#
-#
-# # Initialize a random population of 300
-# pop = toolbox.population(n=300)
-#
-# # Evaluate the entire population
-# fitnesses = list(map(toolbox.evaluate, pop))
-# for ind, fit in zip(pop, fitnesses):
-#     ind.fitness.values = fit
-#
-# # Initialize a separate individual for comparison
-# a_given_individual = toolbox.population(n=1)[0]
-# a_given_individual.fitness.values = toolbox.evaluate(a_given_individual)
-#
-# # Sort the population by pareto dominance in comparison to the separate individual
-# dominated = [ind for ind in pop if pareto_dominance(a_given_individual, ind)]
-# dominators = [ind for ind in pop if pareto_dominance(ind, a_given_individual)]
-# others = [ind for ind in pop if not ind in dominated and not ind in dominators]
-#
-# # Plot the objective space using sorted population
-# for ind in dominators:
-#     plt.plot(ind.fitness.values[0], ind.fitness.values[1], 'r.', alpha=0.7)
-# for ind in dominated:
-#     plt.plot(ind.fitness.values[0], ind.fitness.values[1], 'g.', alpha=0.7)
-# for ind in others:
-#     plt.plot(ind.fitness.values[0], ind.fitness.values[1], 'k.', alpha=0.7, ms=3)
-# plt.plot(a_given_individual.fitness.values[0], a_given_individual.fitness.values[1], 'bo', ms=6)
-# plt.xlabel('Mean Squared Error');plt.ylabel('Tree Size')
-# plt.title('Objective space')
-# plt.tight_layout()
-# plt.show()
-
 # Main evolutionary algorithm
-NGEN = 60  # number of generations
+NGEN = 50  # number of generations
 MU = 50  # size of population
 LAMBDA = 100  # number of children to produce at each generation
 CXPB = 0.5  # probability that an offspring is produced by crossover
@@ -203,18 +165,19 @@ best_individual = hof[0]
 # Plot the result of out run and display the best individual
 print("Best individual is: %s\nwith fitness: %s" % (best_individual, best_individual.fitness))
 gen, avg, min_, max_ = logbook.select("gen", "avg", "min", "max")
-plt.plot(gen, np.mean(avg, axis=1), label="average")
-plt.plot(gen, np.mean(min_, axis=1), label="minimum")
+plt.plot(gen, np.mean(np.delete(avg, 1, axis=1), axis=1), label="average of average fitness values")
+plt.plot(gen, np.mean(np.delete(min_, 1, axis=1), axis=1), label="minimum of average fitness values")
 plt.xlabel("Generation")
 plt.ylabel("Average Fitness Values")
 plt.legend(loc="upper left")
 plt.show()
+plt.savefig('out/predict_with_deap/evolution_history.png', bbox_inches='tight')
 
 # Split fitness values into separate lists
-fitness_1 = [ind.fitness.values[0] for ind in hof]
-fitness_2 = [ind.fitness.values[1] for ind in hof]
-pop_1 = [ind.fitness.values[0] for ind in pop]
-pop_2 = [ind.fitness.values[1] for ind in pop]
+fitness_1 = [ind.fitness.values[1] for ind in hof]
+fitness_2 = [ind.fitness.values[2] for ind in hof]
+pop_1 = [ind.fitness.values[1] for ind in pop]
+pop_2 = [ind.fitness.values[2] for ind in pop]
 
 # Print dominated population for debugging
 # for ind in pop:
@@ -222,11 +185,12 @@ pop_2 = [ind.fitness.values[1] for ind in pop]
 
 plt.scatter(pop_1, pop_2, color='b')
 plt.scatter(fitness_1, fitness_2, color='r')
-plt.plot(fitness_1, fitness_2, color='r', drawstyle='steps-post')
+plt.plot(fitness_1, fitness_2, color='r', linestyle='None')
 plt.xlabel("FPR")
 plt.ylabel("FNR")
 plt.title("Pareto Front")
 plt.show()
+plt.savefig('out/predict_with_deap/pareto_front.png', bbox_inches='tight')
 
 f1 = np.array(fitness_1)
 f2 = np.array(fitness_2)
@@ -235,8 +199,10 @@ f2 = np.array(fitness_2)
 print("Area Under Curve: %s" % (np.sum(np.abs(np.diff(f1))*f2[:-1])))
 
 # Show stats for the best individual
-fpr, fnr = evaluate_individual_fitness(best_individual, x_validation, y_validation)
+tpr, tnr, fpr, fnr = evaluate_individual_performance(best_individual, x_validation, y_validation)
 print("")
 print("Best individual stats:")
+print("TPR:", tpr)
+print("TNR:", tnr)
 print("FPR:", fpr)
 print("FNR:", fnr)
