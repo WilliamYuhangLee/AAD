@@ -1,0 +1,3 @@
+[submodule "emade"]
+	path = emade
+	url = https://github.gatech.edu/emade/emade.git
