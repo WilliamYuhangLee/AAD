@@ -88,7 +88,7 @@
         <memoryLimit>30</memoryLimit> <!-- In Percent,  -->
     </evaluation>
     <localRunParameters>
-        <workersPerHost>1</workersPerHost>
+        <workersPerHost>5</workersPerHost>
     </localRunParameters>
     <slurmEngineParameters>
         <numHosts>3</numHosts>
