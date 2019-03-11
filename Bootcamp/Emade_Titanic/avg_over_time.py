@@ -25,4 +25,4 @@ def merge_pareto_files(numbers):
 
 result = merge_pareto_files([23404, 30665, 7165, 1502])
 print(result)
-result.to_csv("pareto_fronts_combined.csv")
+result.to_csv("pareto_combined.csv")
