@@ -12,7 +12,7 @@
         <username>emade</username>
         <password>emade</password>
         <database>emade_titanic</database>
-        <reuse>0</reuse>
+        <reuse>1</reuse>
     </dbConfig>
     <datasets>
         <dataset>
@@ -88,7 +88,7 @@
         <memoryLimit>30</memoryLimit> <!-- In Percent,  -->
     </evaluation>
     <localRunParameters>
-        <workersPerHost>5</workersPerHost>
+        <workersPerHost>1</workersPerHost>
     </localRunParameters>
     <slurmEngineParameters>
         <numHosts>3</numHosts>
